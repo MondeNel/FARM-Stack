@@ -153,3 +153,101 @@ async def delete_list(list_id: str) -> bool:
     return True  # Assuming the list is always deleted successfully
 
 
+# ==============================
+# Model for New To-Do Item Request Body
+# ==============================
+
+class NewItem(BaseModel):
+    """
+    Model for the request body when creating a new To-Do item.
+
+    This model expects the name of the new To-Do item to be provided as input.
+    """
+    label: str  # The label (name) of the new To-Do item
+
+# ==============================
+# Model for New To-Do Item Response
+# ==============================
+
+class NewItemResponse(BaseModel):
+    """
+    Model for the response returned after creating a new To-Do item.
+
+    This model contains the ID and label of the newly created To-Do item.
+    """
+    id: str  # The ID of the newly created To-Do item
+    label: str  # The label (name) of the newly created To-Do item
+
+# ==============================
+# Endpoint: Create New To-Do Item
+# ==============================
+
+@app.post("/api/lists/{list_id}/items", status_code=status.HTTP_201_CREATED)
+async def create_todo_item(list_id: str, new_item: NewItem) -> NewItemResponse:
+    """
+    Creates a new To-Do item in the specified list.
+
+    This endpoint accepts the ID of a To-Do list and the name of a new To-Do item,
+    creates the item in the specified list, and returns the newly created item's ID and name.
+
+    :param list_id: The ID of the To-Do list to which the item belongs.
+    :param new_item: The request body containing the name of the new To-Do item.
+    :return: A `NewItemResponse` object containing the ID and name of the created To-Do item.
+    """
+    # Create the item in the specified list and return the response with the new item's ID and label
+    return NewItemResponse(
+        id=await app.todo_dal.create_item(ObjectId(list_id), new_item.label),  # Create the item in the list
+        label=new_item.label  # Return the label of the newly created item
+    )
+
+# ==============================
+# Endpoint: Delete Specific To-Do Item
+# ==============================
+
+@app.delete("/api/lists/{list_id}/items/{item_id}")
+async def delete_item(list_id: str, item_id: str) -> TodoList:
+    """
+    Deletes a specific To-Do item from a To-Do list.
+
+    This endpoint deletes a To-Do item by its ID from a specified To-Do list.
+
+    :param list_id: The ID of the To-Do list containing the item.
+    :param item_id: The ID of the To-Do item to delete.
+    :return: The updated To-Do list after the item is deleted.
+    """
+    # Delete the item from the specified To-Do list
+    return await app.todo_dal.delete_item(ObjectId(list_id), ObjectId(item_id))
+
+# ==============================
+# Model for To-Do Item Update Request Body
+# ==============================
+
+class TodoItemUpdate(BaseModel):
+    """
+    Model for the request body when updating a To-Do item.
+
+    This model expects the new label for the To-Do item and the updated checked state to be provided as input.
+    """
+    label: str  # The new label (name) for the To-Do item
+    checked_state: bool  # The new checked state (True or False) for the To-Do item
+
+# ==============================
+# Endpoint: Set Checked State for To-Do Item
+# ==============================
+
+@app.patch("/api/lists/{list_id}/checked_state")
+async def set_checked_state(list_id: str, item_id: str, item_update: TodoItemUpdate) -> TodoList:
+    """
+    Updates the checked state of a specific To-Do item in a To-Do list.
+
+    This endpoint updates the label and checked state of a specific To-Do item in a To-Do list.
+
+    :param list_id: The ID of the To-Do list containing the item to update.
+    :param item_id: The ID of the To-Do item to update.
+    :param item_update: The request body containing the new label and checked state.
+    :return: The updated `TodoList` object after modifying the item.
+    """
+    # Update the checked state and label of the To-Do item in the specified list
+    return await app.todo_dal.set_checked_state(ObjectId(list_id), ObjectId(item_id), item_update.label, item_update.checked_state)
+
+
