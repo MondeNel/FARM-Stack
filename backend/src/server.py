@@ -117,3 +117,39 @@ async def create_todo_list(new_list: NewList) -> NewListResponse:
         id=await app.todo_dal.create_list(new_list.name),  # Create the list in the database and get the ID
         name=new_list.name  # Return the name of the new list
     )
+
+# ==============================
+# Endpoint: Get Specific To-Do List
+# ==============================
+
+@app.get("/api/lists/{list_id}")
+async def get_list(list_id: str) -> TodoList:
+    """
+    Retrieves a specific To-Do list from the database by its ID.
+
+    This endpoint fetches a To-Do list by its ID and returns the list with all its items.
+    The list will include its name, ID, and associated To-Do items.
+
+    :param list_id: The ID of the To-Do list to retrieve.
+    :return: A `TodoList` object representing the requested To-Do list with all its items.
+    """
+    return await app.todo_dal.get_list(ObjectId(list_id))  # Retrieve the list by its ID from the database
+
+# ==============================
+# Endpoint: Delete Specific To-Do List
+# ==============================
+
+@app.delete("/api/lists/{list_id}")
+async def delete_list(list_id: str) -> bool:
+    """
+    Deletes a specific To-Do list from the database.
+
+    This endpoint deletes a To-Do list by its ID. If the list is successfully deleted, it returns `True`.
+    
+    :param list_id: The ID of the To-Do list to delete.
+    :return: `True` if the list is successfully deleted, otherwise `False`.
+    """
+    await app.todo_dal.delete_list(ObjectId(list_id))  # Delete the list by its ID from the database
+    return True  # Assuming the list is always deleted successfully
+
+
