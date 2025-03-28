@@ -251,3 +251,63 @@ async def set_checked_state(list_id: str, item_id: str, item_update: TodoItemUpd
     return await app.todo_dal.set_checked_state(ObjectId(list_id), ObjectId(item_id), item_update.label, item_update.checked_state)
 
 
+
+# ==============================
+# Model for Dummy Response (Testing)
+# ==============================
+
+class DummyResponse(BaseModel):
+    """
+    Model for the dummy response returned by the /api/dummy endpoint.
+
+    This model contains a dummy ID and the current date and time for testing purposes.
+    """
+    id: str  # The dummy ID (ObjectId as string)
+    when: datetime  # The current date and time of the request
+
+# ==============================
+# Endpoint: Dummy API for Testing
+# ==============================
+
+@app.get("/api/dummy")
+async def get_dummy() -> DummyResponse:
+    """
+    Retrieves a dummy response for testing purposes.
+
+    This endpoint returns a dummy response for testing the API.
+
+    :return: A `DummyResponse` object containing a dummy message with a generated ID and the current time.
+    """
+    # Generate a dummy response containing a random ObjectId and the current timestamp
+    return DummyResponse(
+        id=str(ObjectId()),  # Generate a dummy ID (ObjectId converted to string)
+        when=datetime.now(),  # Get the current date and time
+    )
+
+# ==============================
+# Main Function for Running the Server
+# ==============================
+
+def main(argv=sys.argv[1:]):
+    """
+    Main function to run the FastAPI server using Uvicorn.
+
+    This function starts the Uvicorn ASGI server to run the FastAPI application,
+    with the option to enable reloading if the DEBUG mode is set to True.
+    
+    :param argv: Command-line arguments passed to the script.
+    """
+    try:
+        # Run the FastAPI application with Uvicorn on the specified host and port
+        uvicorn.run("server:app", host="0.0.0.0", port=3001, reload=DEBUG)
+    except KeyboardInterrupt:
+        # Gracefully handle server shutdown when interrupted
+        pass
+
+# ==============================
+# Check for Direct Script Execution
+# ==============================
+
+if __name__ == "__main__":
+    main()  # Run the main function if the script is executed directly
+
