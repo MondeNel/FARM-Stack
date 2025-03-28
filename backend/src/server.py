@@ -57,4 +57,63 @@ async def lifespan(app: FastAPI):
 # ==============================
 # FastAPI Application
 # ==============================
-app = FastAPI(lifespan=lifespan)  # Create a FastAPI application instance with custom lifespan handler
+app = FastAPI(lifespan=lifespan, debug=DEBUG)  # Create a FastAPI application instance with custom lifespan handler
+
+
+
+# ==============================
+# Endpoint: Get all To-Do Lists
+# ==============================
+
+@app.get("/api/lists")
+async def get_all_lists() -> list[ListSummary]:
+    """
+    Retrieves all the To-Do lists from the database.
+
+    This endpoint fetches all available To-Do lists and returns them as a list of `ListSummary` objects. 
+    Each `ListSummary` contains the ID, name, and item count of the To-Do list.
+
+    :return: A list of `ListSummary` objects representing all To-Do lists.
+    """
+    return [i async for i in app.todo_dal.get_all_lists()]
+
+# ==============================
+# Request and Response Models for New List
+# ==============================
+
+class NewList(BaseModel):
+    """
+    Model for the request body when creating a new To-Do list.
+
+    This model expects the name of the new To-Do list to be provided as input.
+    """
+    name: str
+
+class NewListResponse(BaseModel):
+    """
+    Model for the response returned after creating a new To-Do list.
+
+    This model contains the ID and name of the newly created To-Do list.
+    """
+    id: str
+    name: str
+
+# ==============================
+# Endpoint: Create a New To-Do List
+# ==============================
+
+@app.post("/api/lists", status_code=status.HTTP_201_CREATED)
+async def create_todo_list(new_list: NewList) -> NewListResponse:
+    """
+    Creates a new To-Do list in the database.
+
+    This endpoint accepts the name of a new To-Do list, creates the list in the database, 
+    and returns the newly created list's ID and name.
+
+    :param new_list: The request body containing the name of the new To-Do list.
+    :return: A `NewListResponse` object containing the ID and name of the created To-Do list.
+    """
+    return NewListResponse(
+        id=await app.todo_dal.create_list(new_list.name),  # Create the list in the database and get the ID
+        name=new_list.name  # Return the name of the new list
+    )
