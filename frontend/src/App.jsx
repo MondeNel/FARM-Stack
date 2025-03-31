@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import axios from 'axios'
-import ListToDoLists from './ListToDoLists'  // Import component to display list of To-Do lists
-import TodoList from './TodoList'  // Import component to display the details of a selected To-Do list
+import ListToDoLists from './ListToDoLists'  
+import TodoList from './TodoList' 
 import './App.css'
 
 // Main App component that handles fetching, displaying, creating, and deleting to-do lists.
