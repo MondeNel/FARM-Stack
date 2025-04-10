@@ -1,0 +1,4 @@
+[tool.pytest.ini_options]
+
+# Specifies the path to the source code directory for pytest to find modules
+pythonpath = "src"

@@ -1,10 +1,9 @@
-# Data access layer for handling database operations using MongoDB (FARM Stack)
-
 from bson import ObjectId
 from motor.motor_asyncio import AsyncIOMotorClient
 from pymongo import ReturnDocument
-from pydantic import BaseModel 
+from pydantic import BaseModel
 from uuid import uuid4
+from typing import Union, Optional
 
 # ================================
 # Data Models
@@ -23,17 +22,18 @@ class ListSummary(BaseModel):
     def from_doc(doc) -> "ListSummary":
         """
         Converts a MongoDB document into a ListSummary object.
-        
+
         :param doc: MongoDB document containing list details.
         :return: ListSummary object.
         """
         return ListSummary(
-            id=str(doc["_id"]),  
+            id=str(doc["_id"]),
             name=doc["name"],
-            item_count=doc["item_count"]
+            item_count=len(doc.get("items", []))  # Fixed item_count calculation
         )
 
-class TodoListItem(BaseModel):  
+
+class TodoListItem(BaseModel):
     """
     Represents a single To-Do list item.
     Each item has an ID, label (task name), and a boolean checked state.
@@ -46,15 +46,16 @@ class TodoListItem(BaseModel):
     def from_doc(doc) -> "TodoListItem":
         """
         Converts a MongoDB document into a TodoListItem object.
-        
+
         :param doc: MongoDB document containing item details.
         :return: TodoListItem object.
         """
-        return TodoListItem(  
-            id=str(doc["_id"]),  
+        return TodoListItem(
+            id=str(doc["_id"]),
             label=doc["label"],
             checked=doc["checked"]
         )
+
 
 class TodoList(BaseModel):
     """
@@ -63,21 +64,22 @@ class TodoList(BaseModel):
     """
     id: str
     name: str
-    items: list[TodoListItem]  # Fixed incorrect reference
+    items: list[TodoListItem]
 
     @staticmethod
     def from_doc(doc) -> "TodoList":
         """
         Converts a MongoDB document into a TodoList object.
-        
+
         :param doc: MongoDB document containing to-do list details.
         :return: TodoList object.
         """
-        return TodoList(  
-            id=str(doc["_id"]),  
+        return TodoList(
+            id=str(doc["_id"]),
             name=doc["name"],
-            items=[TodoListItem.from_doc(item) for item in doc["items"]]
+            items=[TodoListItem.from_doc(item) for item in doc.get("items", [])]
         )
+
 
 # ================================
 # Database Operations
@@ -96,7 +98,7 @@ class ToDoAll:
         """
         self.todo_collection = todo_collection
 
-    async def list_todo_lists(self, session=None):
+    async def get_all_lists(self, session=None):
         """
         Retrieves a list of To-Do lists with their name and item count.
 
@@ -107,7 +109,7 @@ class ToDoAll:
             {},  # Retrieve all documents
             projection={  # Corrected spelling (was "projecttion")
                 "name": 1,
-                "item_count": {"$size": "$items"},  # Calculate item count dynamically
+                "items": 1,  # Retrieve the items to calculate the count
             },
             sort={"name": 1},  # Sort lists alphabetically by name
             session=session,
@@ -128,42 +130,44 @@ class ToDoAll:
         )
         return str(response.inserted_id)  # Return the inserted list's ID
     
-    async def get_todo_list(self, id: str, session=None):
+    async def get_todo_list(self, id: Union[str, ObjectId], session=None) -> Optional[TodoList]:
         """
         Retrieves a To-Do list by its ID.
-        
         """
+        if not self.is_valid_object_id(id):
+            raise ValueError("Invalid ObjectId format.")
+
         doc = await self.todo_collection.find_one(
             {"_id": ObjectId(id)},
             session=session,
         )
-        return TodoList.from_doc(doc)
+        if doc:
+            return TodoList.from_doc(doc)
+        return None
     
-    async def delete_todo_list(self, id: str | ObjectId, session=None):
+    async def delete_todo_list(self, id: Union[str, ObjectId], session=None) -> bool:
         """
         Deletes a To-Do list by its ID.
-        
         """
+        if not self.is_valid_object_id(id):
+            raise ValueError("Invalid ObjectId format.")
+
         response = await self.todo_collection.delete_one(
             {"_id": ObjectId(id)},
             session=session,
         )
-
         return response.deleted_count == 1
     
-    async def create_item(
-            self,
-            id: str | ObjectId,
-            label: str,
-            session=None,
-    ) -> TodoList | None:
+    async def create_item(self, id: Union[str, ObjectId], label: str, session=None) -> Optional[TodoList]:
         """
         Creates a new item in a To-Do list.
-        
         """
+        if not self.is_valid_object_id(id):
+            raise ValueError("Invalid ObjectId format.")
+        
         response = await self.todo_collection.find_one_and_update(
             {"_id": ObjectId(id)},
-            {"$push": {"items": {"_id": uuid4().hex, "label": label, "checked": False}}},
+            {"$push": {"items": {"_id": uuid4().hex, "label": label, "checked": False}}}, 
             session=session,
             return_document=ReturnDocument.AFTER,
         )
@@ -171,15 +175,17 @@ class ToDoAll:
     
     async def set_checked_state(
             self,
-            list_id: str | ObjectId,
+            list_id: Union[str, ObjectId],
             item_id: str,
             checked_state: bool,
             session=None,
-    ) -> TodoList | None:
+    ) -> Optional[TodoList]:
         """
         Updates the checked state of a To-Do list item.
-        
         """
+        if not self.is_valid_object_id(list_id):
+            raise ValueError("Invalid ObjectId format.")
+
         result = await self.todo_collection.find_one_and_update(
             {"_id": ObjectId(list_id), "items._id": item_id},
             {"$set": {"items.$.checked": checked_state}},
@@ -188,17 +194,18 @@ class ToDoAll:
         )
         return TodoList.from_doc(result) if result else None
     
-
     async def delete_item(
             self,
-            list_id: str | ObjectId,
+            list_id: Union[str, ObjectId],
             item_id: str,
             session=None,
-    ) -> TodoList | None:
+    ) -> Optional[TodoList]:
         """
         Deletes an item from a To-Do list.
-        
         """
+        if not self.is_valid_object_id(list_id):
+            raise ValueError("Invalid ObjectId format.")
+
         result = await self.todo_collection.find_one_and_update(
             {"_id": ObjectId(list_id)},
             {"$pull": {"items": {"_id": item_id}}},
@@ -206,4 +213,12 @@ class ToDoAll:
             return_document=ReturnDocument.AFTER,
         )
         return TodoList.from_doc(result) if result else None
-    
+
+    @staticmethod
+    def is_valid_object_id(id: Union[str, ObjectId]) -> bool:
+        """Check if the ID is a valid ObjectId."""
+        try:
+            ObjectId(id)
+            return True
+        except Exception:
+            return False
