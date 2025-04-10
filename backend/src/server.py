@@ -4,6 +4,7 @@ import os
 import sys
 from bson import ObjectId
 from fastapi import FastAPI, status, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
 from pydantic import BaseModel
 import uvicorn
@@ -13,6 +14,7 @@ from dal import ToDoAll, ListSummary, TodoList
 COLLECTION_NAME = "todo_list"
 MONGO_URL = os.getenv("MONGO_URL")
 DEBUG = os.getenv("DEBUG", "False").lower() in {"1", "true", "on", "yes"}
+
 
 
 # Helper function to validate ObjectId format
@@ -47,6 +49,16 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(lifespan=lifespan, debug=DEBUG)
+
+# Add CORS middleware to allow the frontend to make requests to the backend
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173"],  # Replace with the URL of your frontend
+    allow_credentials=True,
+    allow_methods=["*"],  # Allows all HTTP methods (GET, POST, etc.)
+    allow_headers=["*"],  # Allows all headers
+)
+
 
 # Request and Response Models for New List
 class NewList(BaseModel):
