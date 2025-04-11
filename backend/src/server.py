@@ -2,8 +2,17 @@ from fastapi import FastAPI, HTTPException, status
 from pydantic import BaseModel
 from typing import Dict, List
 from uuid import uuid4
+from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
+
+# allow requests from your frontend
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173", "http://frontend:5173"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # ─── Models ───────────────────────────────────────────────────────────────────
 
