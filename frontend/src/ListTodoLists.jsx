@@ -1,5 +1,6 @@
 import { useState } from "react";
 import PropTypes from "prop-types";
+import { format } from "date-fns"; // Importing date-fns for formatting
 import "./ListToDoLists.css";
 import { FaEdit, FaSave, FaTrash } from "react-icons/fa";
 
@@ -7,8 +8,8 @@ import { FaEdit, FaSave, FaTrash } from "react-icons/fa";
  * @typedef {Object} ListSummary
  * @property {string} id - Unique identifier of the list.
  * @property {string} name - Name of the list.
- * @property {string} createdAtFormatted - Formatted creation timestamp.
- * @property {string} updatedAtFormatted - Formatted update timestamp.
+ * @property {string} createdAt - Raw creation timestamp.
+ * @property {string} updatedAt - Raw update timestamp.
  */
 
 /**
@@ -115,10 +116,14 @@ export default function ListToDoLists({
                 <span className="item-count">Click to view items</span>
               </div>
 
-              {/* Display createdAt and updatedAt */}
+              {/* Format and display createdAt and updatedAt */}
               <div className="timestamps">
-                <p>Created: {list.createdAtFormatted}</p>
-                <p>Updated: {list.updatedAtFormatted}</p>
+                <p className="timestamp">
+                  Created: {format(new Date(list.createdAt), "MMM dd, yyyy HH:mm")}
+                </p>
+                <p className="timestamp">
+                  Updated: {format(new Date(list.updatedAt), "MMM dd, yyyy HH:mm")}
+                </p>
               </div>
 
               {/* Save button (if editing) */}
@@ -173,8 +178,8 @@ ListToDoLists.propTypes = {
     PropTypes.shape({
       id: PropTypes.string.isRequired,
       name: PropTypes.string.isRequired,
-      createdAtFormatted: PropTypes.string.isRequired,
-      updatedAtFormatted: PropTypes.string.isRequired,
+      createdAt: PropTypes.string.isRequired,
+      updatedAt: PropTypes.string.isRequired,
     })
   ),
   handleSelectList: PropTypes.func.isRequired,

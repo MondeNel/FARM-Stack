@@ -128,3 +128,16 @@ body {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
 }
+
+/* --- Timestamp --- */
+.timestamps {
+  font-size: 0.8rem; /* Smaller font size */
+  color: #777; /* Light gray color */
+  margin-top: 5px;
+}
+
+.timestamp {
+  margin: 0;
+  font-style: italic; /* To differentiate the timestamp */
+}
+
