@@ -3,6 +3,8 @@ from pydantic import BaseModel
 from typing import Dict, List, Optional
 from uuid import uuid4
 from fastapi.middleware.cors import CORSMiddleware
+from datetime import datetime
+import pytz
 
 # Initialize FastAPI app
 app = FastAPI()
@@ -21,17 +23,23 @@ app.add_middleware(
 class ListSummary(BaseModel):
     id: str
     name: str
+    createdAt: str
+    updatedAt: str
 
-# Model for representing a to-do item (with id, label, and checked state)
+# Model for representing a to-do item (with id, label, checked state, createdAt, updatedAt)
 class ToDoItem(BaseModel):
     id: str
     label: str
     checked: bool = False
+    createdAt: str
+    updatedAt: str
 
-# Model for representing a full to-do list (with id, name, and list of items)
+# Model for representing a full to-do list (with id, name, list of items)
 class ToDoList(BaseModel):
     id: str
     name: str
+    createdAt: str
+    updatedAt: str
     items: List[ToDoItem] = []
 
 # Model for creating a new to-do list (only requires name)
@@ -55,10 +63,13 @@ class ToDoItemUpdate(BaseModel):
 # ─── In‑Memory Store ───────────────────────────────────────────────────────────
 
 # A dictionary to simulate a simple in-memory data store.
-# The structure is: {list_id: {name, items}} where 'items' is another dictionary with item_id: item_data
 _store: Dict[str, Dict] = {}
 
 # ─── Helpers ─────────────────────────────────────────────────────────────────
+
+def get_current_time():
+    """Helper function to get the current time with timezone info (UTC)."""
+    return datetime.now(pytz.utc).isoformat()
 
 def _get_list_or_404(list_id: str) -> Dict:
     """
@@ -82,7 +93,12 @@ async def get_all_lists():
     @return: A list of to-do list summaries
     """
     return [
-        ListSummary(id=list_id, name=data["name"])
+        ListSummary(
+            id=list_id,
+            name=data["name"],
+            createdAt=data["createdAt"],
+            updatedAt=data["updatedAt"]
+        )
         for list_id, data in _store.items()
     ]
 
@@ -95,20 +111,35 @@ async def create_todo_list(new_list: NewList):
     @return: The newly created to-do list summary (id and name)
     """
     list_id = str(uuid4())  # Generate a new unique ID for the list
-    _store[list_id] = {"name": new_list.name, "items": {}}  # Add to store
-    return ListSummary(id=list_id, name=new_list.name)
+    created_at = updated_at = get_current_time()  # Set current timestamp
+    _store[list_id] = {"name": new_list.name, "items": {}, "createdAt": created_at, "updatedAt": updated_at}  # Add to store
+    return ListSummary(id=list_id, name=new_list.name, createdAt=created_at, updatedAt=updated_at)
 
 @app.get("/api/lists/{list_id}", response_model=ToDoList)
 async def get_list(list_id: str):
     """
-    Fetch a full to-do list (id, name, and items) by its ID.
+    Fetch a full to-do list (id, name, items, timestamps) by its ID.
     
     @param list_id: ID of the list to fetch
     @return: The full to-do list details
     """
     data = _get_list_or_404(list_id)
-    items = list(data["items"].values())  # Convert the dictionary of items to a list
-    return ToDoList(id=list_id, name=data["name"], items=items)
+    items = [
+        ToDoItem(
+            id=item_id,
+            label=item["label"],
+            checked=item["checked"],
+            createdAt=item["createdAt"],
+            updatedAt=item["updatedAt"]
+        ) for item_id, item in data["items"].items()
+    ]
+    return ToDoList(
+        id=list_id,
+        name=data["name"],
+        createdAt=data["createdAt"],
+        updatedAt=data["updatedAt"],
+        items=items
+    )
 
 @app.put("/api/lists/{list_id}", response_model=ListSummary)
 async def update_list_name(list_id: str, update: UpdateListName):
@@ -121,7 +152,8 @@ async def update_list_name(list_id: str, update: UpdateListName):
     """
     data = _get_list_or_404(list_id)
     data["name"] = update.name  # Update the name
-    return ListSummary(id=list_id, name=update.name)
+    data["updatedAt"] = get_current_time()  # Update the updatedAt timestamp
+    return ListSummary(id=list_id, name=update.name, createdAt=data["createdAt"], updatedAt=data["updatedAt"])
 
 @app.delete("/api/lists/{list_id}", response_model=None, status_code=status.HTTP_204_NO_CONTENT)
 async def delete_list(list_id: str):
@@ -145,9 +177,16 @@ async def create_item(list_id: str, new_item: NewItem):
     """
     data = _get_list_or_404(list_id)
     item_id = str(uuid4())  # Generate a new unique ID for the item
-    item = ToDoItem(id=item_id, label=new_item.label)
+    created_at = updated_at = get_current_time()  # Set current timestamp
+    item = {
+        "id": item_id,
+        "label": new_item.label,
+        "checked": False,
+        "createdAt": created_at,
+        "updatedAt": updated_at
+    }
     data["items"][item_id] = item  # Add the item to the list
-    return item
+    return ToDoItem(**item)
 
 @app.delete("/api/lists/{list_id}/items/{item_id}", response_model=None, status_code=status.HTTP_204_NO_CONTENT)
 async def delete_item(list_id: str, item_id: str):
@@ -182,12 +221,13 @@ async def update_todo_item(list_id: str, item_id: str, update: ToDoItemUpdate):
 
     # Apply updates to the item
     if update.checked_state is not None:
-        item.checked = update.checked_state
+        item["checked"] = update.checked_state
 
     if update.label is not None:
-        item.label = update.label
+        item["label"] = update.label
 
-    return item
+    item["updatedAt"] = get_current_time()  # Update the updatedAt timestamp
+    return ToDoItem(**item)
 
 # ─── Run the FastAPI application ───────────────────────────────────────────────
 
