@@ -7,6 +7,8 @@ import { FaEdit, FaSave, FaTrash } from "react-icons/fa";
  * @typedef {Object} ListSummary
  * @property {string} id - Unique identifier of the list.
  * @property {string} name - Name of the list.
+ * @property {string} createdAtFormatted - Formatted creation timestamp.
+ * @property {string} updatedAtFormatted - Formatted update timestamp.
  */
 
 /**
@@ -113,6 +115,12 @@ export default function ListToDoLists({
                 <span className="item-count">Click to view items</span>
               </div>
 
+              {/* Display createdAt and updatedAt */}
+              <div className="timestamps">
+                <p>Created: {list.createdAtFormatted}</p>
+                <p>Updated: {list.updatedAtFormatted}</p>
+              </div>
+
               {/* Save button (if editing) */}
               {editingId === list.id ? (
                 <button
@@ -165,6 +173,8 @@ ListToDoLists.propTypes = {
     PropTypes.shape({
       id: PropTypes.string.isRequired,
       name: PropTypes.string.isRequired,
+      createdAtFormatted: PropTypes.string.isRequired,
+      updatedAtFormatted: PropTypes.string.isRequired,
     })
   ),
   handleSelectList: PropTypes.func.isRequired,

@@ -48,11 +48,36 @@ function App() {
   async function reloadData() {
     try {
       const { data } = await axios.get("/api/lists");
-      setListSummaries(data);
+      setListSummaries(data.map((list) => ({
+        ...list,
+        createdAtFormatted: formatDate(list.createdAt),
+        updatedAtFormatted: formatDate(list.updatedAt)
+      })));
       window.localStorage.setItem("todo-lists", JSON.stringify(data));
     } catch (error) {
       console.error("Error fetching lists:", error);
     }
+  }
+
+  /**
+   * Format date with time zone
+   * 
+   * @param {string} date - ISO 8601 formatted date string
+   * @return {string} - Formatted date string with time zone
+   */
+  function formatDate(date) {
+    const formattedDate = new Date(date);
+    return new Intl.DateTimeFormat('en-US', {
+      weekday: 'short',
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: 'numeric',
+      minute: 'numeric',
+      second: 'numeric',
+      hour12: true,
+      timeZoneName: 'short',
+    }).format(formattedDate);
   }
 
   /**
