@@ -1,75 +1,130 @@
 /* ListTodoLists.css */
+
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: #f8f9fa;
+  color: #333;
+  margin: 0;
+  padding: 0;
+}
+
 .ListTodoLists {
-    max-width: 600px;
-    margin: 0 auto;
-    padding: 2rem;
-  }
-  
-  .create-list-container {
-    margin-bottom: 2rem;
-  }
-  
-  .input-group {
-    display: flex;
-    gap: 0.5rem;
-  }
-  
-  .input-group input {
-    flex: 1;
-    padding: 0.5rem;
-  }
-  
-  .list-summaries {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-  }
-  
-  .list-summary {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 1rem;
-    margin-bottom: 0.5rem;
-    background: #fff;
-    border-radius: 4px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-    cursor: pointer;
-    transition: transform 0.2s;
-  }
-  
-  .list-summary:hover {
-    transform: translateY(-2px);
-  }
-  
-  .list-info {
-    display: flex;
-    flex-direction: column;
-  }
-  
-  .item-count {
-    font-size: 0.8rem;
-    color: #666;
-  }
-  
-  .delete-button {
-    background: none;
-    border: none;
-    color: #ff4444;
-    cursor: pointer;
-  }
-  
-  .loading-spinner {
-    border: 3px solid #f3f3f3;
-    border-top: 3px solid #3498db;
-    border-radius: 50%;
-    width: 20px;
-    height: 20px;
-    animation: spin 1s linear infinite;
-    margin: 0 auto;
-  }
-  
-  @keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-  }
+  max-width: 600px;
+  margin: 3rem auto;
+  padding: 2rem;
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.ListTodoLists h1 {
+  font-size: 1.8rem;
+  text-align: center;
+  margin-bottom: 2rem;
+  color: #222;
+}
+
+.create-list-container {
+  margin-bottom: 2rem;
+}
+
+.input-group {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.input-group input {
+  flex: 1;
+  padding: 0.75rem 1rem;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 1rem;
+  transition: border-color 0.2s;
+}
+
+.input-group input:focus {
+  outline: none;
+  border-color: #007bff;
+}
+
+.input-group button {
+  padding: 0.75rem 1.25rem;
+  background: #007bff;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background-color 0.2s;
+}
+
+.input-group button:hover {
+  background-color: #0056b3;
+}
+
+.list-summaries {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.list-summary {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.25rem;
+  margin-bottom: 0.75rem;
+  background: #f0f2f5;
+  border-radius: 10px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+  cursor: pointer;
+  transition: transform 0.2s, background-color 0.2s;
+}
+
+.list-summary:hover {
+  background-color: #e2e6ea;
+  transform: translateY(-2px);
+}
+
+.list-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.list-info span:first-child {
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+.item-count {
+  font-size: 0.85rem;
+  color: #666;
+}
+
+.delete-button {
+  background: none;
+  border: none;
+  color: #dc3545;
+  font-size: 1.25rem;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.delete-button:hover {
+  color: #a71d2a;
+}
+
+.loading-spinner {
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #007bff;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  animation: spin 1s linear infinite;
+  margin: 2rem auto;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}

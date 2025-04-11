@@ -1,6 +1,6 @@
 import { useState } from "react";
 import PropTypes from "prop-types";
-
+import './ListToDoLists.css';
 
 /**
  * @typedef {Object} ListSummary
@@ -26,7 +26,6 @@ export default function ListToDoLists({
 }) {
   const [newName, setNewName] = useState("");
 
-  // Ensure we always have an array to map over
   const lists = Array.isArray(listSummaries) ? listSummaries : [];
 
   /** Handle form submit to create a new list */
@@ -38,35 +37,45 @@ export default function ListToDoLists({
   }
 
   return (
-    <div className="list-container">
+    <div className="ListTodoLists">
       <h1>Your To‑Do Lists</h1>
-      <form onSubmit={onSubmit}>
-        <input
-          type="text"
-          placeholder="New list name"
-          value={newName}
-          onChange={(e) => setNewName(e.target.value)}
-        />
-        <button type="submit">Create</button>
+
+      <form onSubmit={onSubmit} className="create-list-container">
+        <div className="input-group">
+          <input
+            type="text"
+            placeholder="New list name"
+            value={newName}
+            onChange={(e) => setNewName(e.target.value)}
+          />
+          <button type="submit">Create</button>
+        </div>
       </form>
 
       {listSummaries == null ? (
-        <p>Loading…</p>
+        <div className="loading-spinner"></div>
       ) : lists.length === 0 ? (
         <p>No lists yet.</p>
       ) : (
-        <ul>
+        <ul className="list-summaries">
           {lists.map((list) => (
-            <li key={list.id}>
-              <button onClick={() => handleSelectList(list.id)}>
-                {list.name}
-              </button>
+            <li key={list.id} className="list-summary">
+              <div className="list-info">
+                <span>{list.name}</span>
+                <span className="item-count">Click to view items</span>
+              </div>
               <button
+                className="delete-button"
                 onClick={() => handleDeleteToDoList(list.id)}
                 aria-label={`Delete ${list.name}`}
               >
                 ×
               </button>
+              <button
+                onClick={() => handleSelectList(list.id)}
+                aria-label={`Select ${list.name}`}
+                style={{ display: 'none' }} // Triggering via entire list click
+              />
             </li>
           ))}
         </ul>
@@ -87,7 +96,6 @@ ListToDoLists.propTypes = {
   handleDeleteToDoList: PropTypes.func.isRequired,
 };
 
-// If someone forgets to pass listSummaries, default to null (so we show Loading…)
 ListToDoLists.defaultProps = {
   listSummaries: null,
 };
