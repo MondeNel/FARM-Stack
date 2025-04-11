@@ -1,22 +1,150 @@
-.ToDoList .back {
-    margin: 0 1em;
-    padding: 1em;
-    float: left;
-  }
-  
-  .ToDoList .item {
-    border: 1px solid lightgray;
-    padding: 1em;
-    margin: 1em;
-    cursor: pointer;
-    display: flex;
-  }
-  
-  .ToDoList .label {
-    margin-left: 1ex;
-  }
-  
-  .ToDoList .checked .label {
-    text-decoration: line-through;
-    color: lightgray;
-  }
+.ToDoList {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 2rem;
+  background-color: #f9f9f9;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.back-button {
+  background: none;
+  border: none;
+  color: #3498db;
+  font-size: 1rem;
+  margin-bottom: 1rem;
+  cursor: pointer;
+}
+
+.back-button:hover {
+  text-decoration: underline;
+}
+
+.list-title {
+  font-size: 1.5rem;
+  font-weight: bold;
+  margin-bottom: 1rem;
+}
+
+.item-form {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 2rem;
+}
+
+.item-input {
+  flex: 1;
+  padding: 0.5rem;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+}
+
+.item-add-button {
+  padding: 0.5rem 1rem;
+  border: none;
+  background-color: #3498db;
+  color: #fff;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.item-add-button:hover {
+  background-color: #2980b9;
+}
+
+.items-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #fff;
+  padding: 1rem;
+  margin-bottom: 0.75rem;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.item-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1rem;
+}
+
+.item-label input[type="checkbox"] {
+  transform: scale(1.2);
+  cursor: pointer;
+}
+
+.checked span {
+  text-decoration: line-through;
+  color: #bbb;
+}
+
+.item-delete-button {
+  background: none;
+  border: none;
+  color: #ff4444;
+  font-size: 1.2rem;
+  cursor: pointer;
+}
+
+.item-delete-button:hover {
+  color: #ff0000;
+}
+
+.empty-state {
+  text-align: center;
+  color: #999;
+  font-style: italic;
+}
+
+/* ---- Edit/Update --- */
+.edit-form {
+  display: flex;
+  gap: 0.5rem;
+  flex: 1;
+}
+
+.edit-input {
+  flex: 1;
+  padding: 0.5rem;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+}
+
+.save-button,
+.cancel-button,
+.edit-button {
+  background-color: #3498db;
+  border: none;
+  padding: 0.4rem 0.8rem;
+  color: white;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.cancel-button {
+  background-color: #ccc;
+}
+
+.edit-button {
+  background-color: #f1c40f;
+}
+
+.edit-button:hover {
+  background-color: #d4ac0d;
+}
+
+.item-actions {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
