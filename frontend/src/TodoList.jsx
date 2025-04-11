@@ -11,16 +11,15 @@ import './ToDoList.css';
  */
 
 /**
- * Renders a single to‑do list, with ability to add, toggle, and delete items.
+ * Renders a single to‑do list, with the ability to add, toggle, and delete items.
  *
- * @param {{
- *   listId: string,
- *   handleBackButton: () => void
- * }} props
+ * @param {Object} props
+ * @param {string} props.listId
+ * @param {() => void} props.handleBackButton
  */
 export default function ToDoList({ listId, handleBackButton }) {
   const [listName, setListName] = useState("");
-  const [items, setItems] = useState(/** @type {ToDoItem[]} */ ([]));
+  const [items, setItems] = useState([]);
   const [newLabel, setNewLabel] = useState("");
   const [editingId, setEditingId] = useState(null);
   const [editedLabel, setEditedLabel] = useState("");
@@ -29,80 +28,82 @@ export default function ToDoList({ listId, handleBackButton }) {
     loadList();
   }, [listId]);
 
+  /**
+   * Fetches the list data from the server and sets it to state.
+   */
   async function loadList() {
-    const resp = await axios.get(`/api/lists/${listId}`);
-    const data = resp.data;
+    const { data } = await axios.get(`/api/lists/${listId}`);
     setListName(data.name);
     setItems(data.items);
-    window.localStorage.setItem(
-      `todo-list-${listId}`,
-      JSON.stringify(data.items)
-    );
+    window.localStorage.setItem(`todo-list-${listId}`, JSON.stringify(data.items));
   }
 
+  /**
+   * Adds a new item to the list.
+   * 
+   * @param {React.FormEvent} e
+   */
   async function addItem(e) {
     e.preventDefault();
     if (!newLabel.trim()) return;
 
-    const resp = await axios.post(`/api/lists/${listId}/items`, {
+    const { data: added } = await axios.post(`/api/lists/${listId}/items`, {
       label: newLabel.trim(),
     });
-    const added = resp.data;
-    const updated = [...items, added];
-    setItems(updated);
+
+    const updatedItems = [...items, added];
+    setItems(updatedItems);
     setNewLabel("");
-    setEditingId(added.id);  // Automatically focus on the newly added item to edit
-    setEditedLabel(added.label);  // Set label for editing
-    window.localStorage.setItem(
-      `todo-list-${listId}`,
-      JSON.stringify(updated)
-    );
+    setEditingId(added.id);
+    setEditedLabel(added.label);
+    window.localStorage.setItem(`todo-list-${listId}`, JSON.stringify(updatedItems));
   }
 
+  /**
+   * Toggles the checked state of an item.
+   * 
+   * @param {ToDoItem} item
+   */
   async function toggleItem(item) {
-    const resp = await axios.patch(`/api/lists/${listId}/items/${item.id}`, {
+    const { data: updatedItem } = await axios.patch(`/api/lists/${listId}/items/${item.id}`, {
       checked_state: !item.checked,
     });
 
-    const updatedItem = resp.data;
-    const updated = items.map((it) =>
-      it.id === updatedItem.id ? updatedItem : it
-    );
-    setItems(updated);
-    window.localStorage.setItem(
-      `todo-list-${listId}`,
-      JSON.stringify(updated)
-    );
+    const updatedItems = items.map((it) => it.id === updatedItem.id ? updatedItem : it);
+    setItems(updatedItems);
+    window.localStorage.setItem(`todo-list-${listId}`, JSON.stringify(updatedItems));
   }
 
+  /**
+   * Deletes an item from the list.
+   * 
+   * @param {string} itemId
+   */
   async function deleteItem(itemId) {
     await axios.delete(`/api/lists/${listId}/items/${itemId}`);
-    const updated = items.filter((it) => it.id !== itemId);
-    setItems(updated);
-    window.localStorage.setItem(
-      `todo-list-${listId}`,
-      JSON.stringify(updated)
-    );
+    const updatedItems = items.filter((it) => it.id !== itemId);
+    setItems(updatedItems);
+    window.localStorage.setItem(`todo-list-${listId}`, JSON.stringify(updatedItems));
   }
 
+  /**
+   * Updates the label of an item.
+   * 
+   * @param {string} itemId
+   */
   async function updateItemLabel(itemId) {
-    const trimmed = editedLabel.trim();
-    if (!trimmed) return;
+    const trimmedLabel = editedLabel.trim();
+    if (!trimmedLabel) return;
 
-    const resp = await axios.patch(`/api/lists/${listId}/items/${itemId}`, {
-      label: trimmed,
+    const { data: updatedItem } = await axios.patch(`/api/lists/${listId}/items/${itemId}`, {
+      label: trimmedLabel,
     });
 
-    const updatedItem = resp.data;
-    const updated = items.map((it) =>
-      it.id === updatedItem.id ? updatedItem : it
-    );
-
-    setItems(updated);
+    const updatedItems = items.map((it) => it.id === updatedItem.id ? updatedItem : it);
+    setItems(updatedItems);
     setEditingId(null);
     setEditedLabel("");
-
-    window.localStorage.setItem(`todo-list-${listId}`, JSON.stringify(updated));
+    window.localStorage.setItem(`todo-list-${listId}`, JSON.stringify(updatedItems));
   }
 
   return (
@@ -164,7 +165,7 @@ export default function ToDoList({ listId, handleBackButton }) {
                       }}
                       className="edit-button"
                     >
-                      🖉  {/* Update icon */}
+                      🖉
                     </button>
                     <button
                       onClick={() => deleteItem(item.id)}
