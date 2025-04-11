@@ -1,13 +1,75 @@
-.ListToDoLists {
-    border: 1px solid lightgray;
-    padding: 1em;
-    margin: 1em 0;
-    cursor: pointer;
+/* ListTodoLists.css */
+.ListTodoLists {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 2rem;
+  }
+  
+  .create-list-container {
+    margin-bottom: 2rem;
+  }
+  
+  .input-group {
     display: flex;
-}
-
-.ListToDoLists .count {
-    padding-left: 1ex;
-    color: blueviolet;
-    font-size: 92%;
-}
+    gap: 0.5rem;
+  }
+  
+  .input-group input {
+    flex: 1;
+    padding: 0.5rem;
+  }
+  
+  .list-summaries {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  
+  .list-summary {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    margin-bottom: 0.5rem;
+    background: #fff;
+    border-radius: 4px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    cursor: pointer;
+    transition: transform 0.2s;
+  }
+  
+  .list-summary:hover {
+    transform: translateY(-2px);
+  }
+  
+  .list-info {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .item-count {
+    font-size: 0.8rem;
+    color: #666;
+  }
+  
+  .delete-button {
+    background: none;
+    border: none;
+    color: #ff4444;
+    cursor: pointer;
+  }
+  
+  .loading-spinner {
+    border: 3px solid #f3f3f3;
+    border-top: 3px solid #3498db;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    animation: spin 1s linear infinite;
+    margin: 0 auto;
+  }
+  
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }

@@ -1,140 +1,143 @@
-import React, { useEffect, useState, useRef } from 'react';
-import axios from 'axios';
-import { BiSolidTrash } from 'react-icons/bi';
-import './TodoList.css';
+import { useEffect, useState } from "react";
+import PropTypes from "prop-types";
+import axios from "axios";
 
 /**
- * TodoList Component
- * 
- * Handles displaying, adding, deleting, and updating items in a to-do list.
- * 
- * @param {Object} props - Component properties
- * @param {string} props.listId - The ID of the selected to-do list
- * @param {Function} props.handleBackButton - Function to navigate back to the main list view
+ * @typedef {Object} ToDoItem
+ * @property {string} id
+ * @property {string} label
+ * @property {boolean} checked
  */
-function TodoList({ listId, handleBackButton }) {
-    // Reference for input field
-    const labelRef = useRef();
-    
-    // State to store the data of the selected to-do list
-    const [listData, setListData] = useState(null);
 
-    /**
-     * Fetches the selected to-do list data when the component mounts or listId changes.
-     */
-    useEffect(() => {
-        const fetchData = async () => {
-            try {
-                const response = await axios.get(`/api/lists/${listId}`);
-                setListData(response.data);
-            } catch (error) {
-                console.error("Error fetching list data:", error);
-            }
-        };
-        fetchData();
-    }, [listId]);
+/**
+ * Renders a single to‑do list, with ability to add, toggle, and delete items.
+ *
+ * @param {{
+ *   listId: string,
+ *   handleBackButton: () => void
+ * }} props
+ */
+export default function ToDoList({ listId, handleBackButton }) {
+  const [listName, setListName] = useState("");
+  const [items, setItems] = useState(/** @type {ToDoItem[]} */ ([]));
+  const [newLabel, setNewLabel] = useState("");
 
-    /**
-     * Creates a new item in the current to-do list.
-     * 
-     * @param {string} label - The text label of the new item
-     */
-    function handleCreateItem(label) {
-        const updateData = async () => {
-            try {
-                const response = await axios.post(`/api/lists/${listData.id}/items`, {
-                    label: label,
-                });
-                setListData(response.data);
-            } catch (error) {
-                console.error("Error creating item:", error);
-            }
-        };
-        updateData();
-    }
+  useEffect(() => {
+    loadList();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [listId]);
 
-    /**
-     * Deletes an item from the to-do list.
-     * 
-     * @param {string} id - The ID of the item to be deleted
-     */
-    function handleDeleteItem(id) {
-        const updateData = async () => {
-            try {
-                const response = await axios.delete(`/api/lists/${listData.id}/items/${id}`);
-                setListData(response.data);
-            } catch (error) {
-                console.error("Error deleting item:", error);
-            }
-        };
-        updateData();
-    }
-    
-    /**
-     * Toggles the checked state of an item in the to-do list.
-     * 
-     * @param {string} itemId - The ID of the item to toggle
-     * @param {boolean} newState - The new checked state of the item
-     */
-    function handleCheckToggle(itemId, newState) {
-        const updateData = async () => {
-            try {
-                const response = await axios.patch(`/api/lists/${listData.id}/items/${itemId}`, {
-                    checked: newState,
-                });
-                setListData(response.data);
-            } catch (error) {
-                console.error("Error updating item state:", error);
-            }
-        };
-        updateData();
-    }
+  /** Load list from backend, then sync to LocalStorage */
+  async function loadList() {
+    const resp = await axios.get(`/api/lists/${listId}`);
+    const data = resp.data;
+    setListName(data.name);
+    setItems(data.items);
 
-    if (listData === null) {
-        return (
-            <div className="TodoList loading">
-                <button className="back" onClick={handleBackButton}>Back</button>
-                Loading to-do list ...
-            </div>
-        );
-    }
-
-    return (
-        <div className="TodoList">
-            <button className="back" onClick={handleBackButton}>Back</button>
-            <h1>List: {listData.name}</h1>
-            <div className="box">
-                <label>
-                    New Item:&nbsp;
-                    <input type="text" ref={labelRef} placeholder="Enter new item" />
-                </label>
-                <button onClick={() => handleCreateItem(labelRef.current.value)}>New</button>
-            </div>
-            {listData.items.length > 0 ? (
-                listData.items.map((item) => (
-                    <div
-                        className={item.checked ? "item checked" : "item"}
-                        key={item.id}
-                        onClick={() => handleCheckToggle(item.id, !item.checked)}>
-                        <span>{item.checked ? "✔" : "✘"}</span>
-                        <span className="label">{item.label}</span>
-                        <span className="flex"></span>
-                        <span
-                            className="trash"
-                            onClick={(evt) => {
-                                evt.stopPropagation(); // Prevent event bubbling to parent div
-                                handleDeleteItem(item.id);
-                            }}
-                        >
-                            <BiSolidTrash />
-                        </span>
-                    </div>
-                ))
-            ) : (
-                <div className="box">There are currently no items.</div>
-            )}
-        </div>
+    // Sync into LocalStorage
+    window.localStorage.setItem(
+      `todo-list-${listId}`,
+      JSON.stringify(data.items)
     );
+  }
+
+  /** Add a new item */
+  async function addItem(e) {
+    e.preventDefault();
+    if (!newLabel.trim()) return;
+
+    const resp = await axios.post(`/api/lists/${listId}/items`, {
+      label: newLabel.trim(),
+    });
+    const added = resp.data;
+    const updated = [...items, added];
+    setItems(updated);
+    setNewLabel("");
+
+    window.localStorage.setItem(
+      `todo-list-${listId}`,
+      JSON.stringify(updated)
+    );
+  }
+
+  /**
+   * Toggle an item’s checked state
+   * @param {ToDoItem} item
+   */
+  async function toggleItem(item) {
+    const resp = await axios.patch(`/api/lists/${listId}/checked_state`, {
+      item_id: item.id,
+      checked_state: !item.checked,
+    });
+    const updatedItem = resp.data;
+    const updated = items.map((it) =>
+      it.id === updatedItem.id ? updatedItem : it
+    );
+    setItems(updated);
+    window.localStorage.setItem(
+      `todo-list-${listId}`,
+      JSON.stringify(updated)
+    );
+  }
+
+  /**
+   * Delete an item
+   * @param {string} itemId
+   */
+  async function deleteItem(itemId) {
+    await axios.delete(`/api/lists/${listId}/items/${itemId}`);
+    const updated = items.filter((it) => it.id !== itemId);
+    setItems(updated);
+    window.localStorage.setItem(
+      `todo-list-${listId}`,
+      JSON.stringify(updated)
+    );
+  }
+
+  return (
+    <div className="todo-list">
+      <button onClick={handleBackButton}>← Back to lists</button>
+      <h2>{listName}</h2>
+
+      <form onSubmit={addItem}>
+        <input
+          type="text"
+          placeholder="New item"
+          value={newLabel}
+          onChange={(e) => setNewLabel(e.target.value)}
+        />
+        <button type="submit">Add</button>
+      </form>
+
+      {items.length === 0 ? (
+        <p>No items yet.</p>
+      ) : (
+        <ul>
+          {items.map((item) => (
+            <li key={item.id}>
+              <label>
+                <input
+                  type="checkbox"
+                  checked={item.checked}
+                  onChange={() => toggleItem(item)}
+                />
+                {item.label}
+              </label>
+              <button
+                onClick={() => deleteItem(item.id)}
+                aria-label={`Delete ${item.label}`}
+              >
+                ×
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
 }
 
-export default TodoList;
+ToDoList.propTypes = {
+  listId: PropTypes.string.isRequired,
+  handleBackButton: PropTypes.func.isRequired,
+};

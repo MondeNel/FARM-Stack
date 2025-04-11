@@ -1,98 +1,93 @@
-import React, { useRef } from 'react';
-import { BiSolidTrash } from 'react-icons/bi';
-import './ListTodoLists.css';
+import { useState } from "react";
+import PropTypes from "prop-types";
+
 
 /**
- * ListToDoLists Component
- * 
- * This component displays a list of to-do lists with options to create, select, and delete lists.
- * 
- * @param {Object[]} listSummaries - Array of to-do list summaries.
- * @param {Function} handleSelectedList - Function to handle selecting a to-do list.
- * @param {Function} handleNewTodoList - Function to create a new to-do list.
- * @param {Function} handleDeleteTodoList - Function to delete a to-do list.
+ * @typedef {Object} ListSummary
+ * @property {string} id
+ * @property {string} name
  */
-function ListToDoLists({
-    listSummaries,
-    handleSelectedList,
-    handleNewTodoList,
-    handleDeleteTodoList,
+
+/**
+ * Displays all to‑do lists, allows creation and deletion.
+ *
+ * @param {{ 
+ *   listSummaries: ListSummary[] | null,
+ *   handleSelectList: (id: string) => void,
+ *   handleNewToDoList: (name: string) => void,
+ *   handleDeleteToDoList: (id: string) => void
+ * }} props
+ */
+export default function ListToDoLists({
+  listSummaries,
+  handleSelectList,
+  handleNewToDoList,
+  handleDeleteToDoList,
 }) {
-    // useRef to store the input field reference for creating a new to-do list
-    const labelRef = useRef();
+  const [newName, setNewName] = useState("");
 
-    // Display loading message while data is being fetched
-    if (listSummaries === null) {
-        return <div className="ListTodoLists loading">Loading to-do lists...</div>;
-    }
+  // Ensure we always have an array to map over
+  const lists = Array.isArray(listSummaries) ? listSummaries : [];
 
-    // Display message when there are no to-do lists available
-    if (listSummaries.length === 0) {
-        return (
-            <div className="ListTodoLists">
-                <div className="box">
-                    <label>
-                        New To-Do List:&nbsp;
-                        {/* Input field for new to-do list name */}
-                        <input type="text" ref={labelRef} placeholder="Enter list name" />
-                    </label>
-                    <button
-                        onClick={() => {
-                            handleNewTodoList(labelRef.current.value); // Create new to-do list
-                        }}
-                    >
-                        New
-                    </button>
-                </div>
-                <p>There are no to-do lists!</p>
-            </div>
-        );
-    }
+  /** Handle form submit to create a new list */
+  function onSubmit(e) {
+    e.preventDefault();
+    if (!newName.trim()) return;
+    handleNewToDoList(newName.trim());
+    setNewName("");
+  }
 
-    return (
-        <div className="ListTodoLists">
-            <h1>All To-Do Lists</h1>
+  return (
+    <div className="list-container">
+      <h1>Your To‑Do Lists</h1>
+      <form onSubmit={onSubmit}>
+        <input
+          type="text"
+          placeholder="New list name"
+          value={newName}
+          onChange={(e) => setNewName(e.target.value)}
+        />
+        <button type="submit">Create</button>
+      </form>
 
-            {/* Section to add a new to-do list */}
-            <div className="box">
-                <label>
-                    New To-Do List:&nbsp;
-                    <input type="text" ref={labelRef} placeholder="Enter list name" />
-                </label>
-                <button
-                    onClick={() => {
-                        handleNewTodoList(labelRef.current.value); // Create new to-do list
-                    }}
-                >
-                    New
-                </button>
-            </div>
-
-            {/* Render all existing to-do lists */}
-            {listSummaries.map((summary) => (
-                <div 
-                    key={summary.id} 
-                    className="summary"
-                    onClick={() => handleSelectedList(summary.id)} // Handle list selection
-                >
-                    <span className='name'>{summary.name}</span>
-                    <span className='count'>({summary.item_count} items)</span>
-                    <span className='flex'></span>
-                    
-                    {/* Delete button */}
-                    <span
-                        className='trash'
-                        onClick={(evt) => {
-                            evt.stopPropagation(); // Prevent event bubbling to avoid selecting the list
-                            handleDeleteTodoList(summary.id); // Delete the selected list
-                        }}
-                    >
-                        <BiSolidTrash />
-                    </span>
-                </div>
-            ))}
-        </div>
-    );
+      {listSummaries == null ? (
+        <p>Loading…</p>
+      ) : lists.length === 0 ? (
+        <p>No lists yet.</p>
+      ) : (
+        <ul>
+          {lists.map((list) => (
+            <li key={list.id}>
+              <button onClick={() => handleSelectList(list.id)}>
+                {list.name}
+              </button>
+              <button
+                onClick={() => handleDeleteToDoList(list.id)}
+                aria-label={`Delete ${list.name}`}
+              >
+                ×
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
 }
 
-export default ListToDoLists;
+ListToDoLists.propTypes = {
+  listSummaries: PropTypes.arrayOf(
+    PropTypes.shape({
+      id: PropTypes.string.isRequired,
+      name: PropTypes.string.isRequired,
+    })
+  ),
+  handleSelectList: PropTypes.func.isRequired,
+  handleNewToDoList: PropTypes.func.isRequired,
+  handleDeleteToDoList: PropTypes.func.isRequired,
+};
+
+// If someone forgets to pass listSummaries, default to null (so we show Loading…)
+ListToDoLists.defaultProps = {
+  listSummaries: null,
+};
