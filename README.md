@@ -1,1 +1,1 @@
-# FARM-Stack
+# FARM-Stack (FastAPI, React, MongoDB/LocalStorage)
